@@ -34,7 +34,17 @@ def read_graph_search_problem(file_path):
 
 def read_8queens_search_problem(file_path):
     #Your p6 code here
-    problem = ''
+    with open(file_path, 'r') as file:
+        lines = file.readlines()
+
+    problem = []
+
+    for row in range(8):
+        line = lines[row].strip().split()
+        for col in range(8):
+            if line[col] == 'q':
+                problem.append((row, col))
+
     return problem
 
 if __name__ == "__main__":
