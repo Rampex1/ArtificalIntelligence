@@ -1,7 +1,28 @@
 import os, sys
+from collections import defaultdict
+
 def read_graph_search_problem(file_path):
     #Your p1 code here
-    problem = ''
+    with open(file_path, 'r') as file:
+        lines = file.readlines()
+
+    start_state = lines[0].strip().split(': ')[1]
+    goal_state = lines[1].strip().split(': ')[1]
+
+    graph = defaultdict(list)
+    for line in lines[2:]:
+        if line.strip():
+            parts = line.strip().split(' ')
+
+            if len(parts) == 3:
+                graph[parts[0]].append((parts[1], parts[2]))
+
+    problem = {
+        'start_state': start_state,
+        'goal_state': goal_state,
+        'graph': graph
+    }
+
     return problem
 
 def read_8queens_search_problem(file_path):
