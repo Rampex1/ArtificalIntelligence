@@ -21,7 +21,7 @@ def dfs_search(problem):
             return True
 
         exploration.append(node)
-        for neighbor, value in reversed(graph[node]):
+        for neighbor, _ in reversed(graph[node]):
             if dfs(neighbor):
                 return True
 
