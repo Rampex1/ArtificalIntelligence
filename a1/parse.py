@@ -10,9 +10,15 @@ def read_graph_search_problem(file_path):
     goal_state = lines[1].strip().split(': ')[1]
 
     graph = defaultdict(list)
+    heuristic = {}
+
     for line in lines[2:]:
         if line.strip():
             parts = line.strip().split(' ')
+
+            if len(parts) == 2:
+                node, h_value = parts
+                heuristic[node] = float(h_value)
 
             if len(parts) == 3:
                 graph[parts[0]].append((parts[1], parts[2]))
@@ -20,7 +26,8 @@ def read_graph_search_problem(file_path):
     problem = {
         'start_state': start_state,
         'goal_state': goal_state,
-        'graph': graph
+        'graph': graph,
+        'heuristic': heuristic
     }
 
     return problem
