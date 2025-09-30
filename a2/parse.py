@@ -1,20 +1,21 @@
 import os, sys
 def read_layout_problem(file_path):
     #Your p1 code here
+
     with open(file_path, 'r') as file:
         lines = file.readlines()
 
-    # Extract seed from first line
+    # Line 1: Seed
     seedLine = lines[0].strip()
     seed = int(seedLine.split(':')[1].strip())
 
-    # Parse the layout grid
+    # Rest: Grid
     layout = []
     for i in range(1, len(lines)):
         line = lines[i].rstrip('\n')
         layout.append(line)
 
-    # Store problem data in a dictionary
+    # Store in a dict
     problem = {
         'seed': seed,
         'layout': layout,

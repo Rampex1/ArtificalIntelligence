@@ -1,22 +1,23 @@
 import sys, random, grader, parse
+from typing import List
+
 
 def random_play_single_ghost(problem):
     random.seed(problem['seed'], version=1)
 
-    # Score constants
-    eatFoodScore = 10
-    pacmanEatenScore = -500
-    pacmanWinScore = 500
-    pacmanMovingScore = -1
+    # Constants
+    EAT_FOOD_SCORE = 10
+    PACMAN_EATEN_SCORE = -500
+    PACMAN_WIN_SCORE = 500
+    PACMAN_MOVING_SCORE = -1
 
-    # Copy layout for manipulation
-    currentLayout = [list(row) for row in problem['layout']]
 
     # Find initial positions
     pacmanPos = None
     ghostPos = None
     foodPositions = set()
 
+    currentLayout = [list(row) for row in problem['layout']]
     for row in range(len(currentLayout)):
         for col in range(len(currentLayout[row])):
             if currentLayout[row][col] == 'P':
@@ -26,21 +27,18 @@ def random_play_single_ghost(problem):
             elif currentLayout[row][col] == '.':
                 foodPositions.add((row, col))
 
-    # Build output string
+    # Output Info
     solution = f"seed: {problem['seed']}\n0\n"
     solution += '\n'.join(''.join(row) for row in currentLayout) + '\n'
-
     score = 0
     moveCount = 0
 
-    # Game loop
     while True:
         moveCount += 1
 
         # ---------------- PACMAN TURN ----------------
         pacmanMoves = getValidMoves(currentLayout, pacmanPos)
-        if not pacmanMoves:
-            break
+        if not pacmanMoves: break
 
         pacmanMove = random.choice(sorted(pacmanMoves))
         newPacmanPos = applyMove(pacmanPos, pacmanMove)
@@ -50,16 +48,16 @@ def random_play_single_ghost(problem):
 
         # Eat food if present
         if newPacmanPos in foodPositions:
-            score += eatFoodScore
+            score += EAT_FOOD_SCORE
             foodPositions.remove(newPacmanPos)
 
         # Moving cost
-        score += pacmanMovingScore
+        score += PACMAN_MOVING_SCORE
         pacmanPos = newPacmanPos
 
         # Pacman runs into ghost
         if pacmanPos == ghostPos:
-            score += pacmanEatenScore
+            score += PACMAN_EATEN_SCORE
             solution += f"{moveCount}: P moving {pacmanMove}\n"
             solution += '\n'.join(''.join(row) for row in currentLayout) + '\n'
             solution += f"score: {score}\nWIN: Ghost"
@@ -67,24 +65,22 @@ def random_play_single_ghost(problem):
 
         # Place Pacman in new position
         currentLayout[pacmanPos[0]][pacmanPos[1]] = 'P'
-
         solution += f"{moveCount}: P moving {pacmanMove}\n"
         solution += '\n'.join(''.join(row) for row in currentLayout) + '\n'
 
-        # ✅ Check win condition BEFORE printing score
+        # Winning condition
         if not foodPositions:
-            score += pacmanWinScore
+            score += PACMAN_WIN_SCORE
             solution += f"score: {score}\nWIN: Pacman"
             return solution
 
-        # Otherwise, print intermediate score
+        # Score display
         solution += f"score: {score}\n"
 
         # ---------------- GHOST TURN ----------------
         moveCount += 1
         ghostMoves = getValidMoves(currentLayout, ghostPos)
-        if not ghostMoves:
-            continue
+        if not ghostMoves: continue
 
         ghostMove = random.choice(sorted(ghostMoves))
         newGhostPos = applyMove(ghostPos, ghostMove)
@@ -95,7 +91,7 @@ def random_play_single_ghost(problem):
 
         # Ghost catches Pacman
         if ghostPos == pacmanPos:
-            score += pacmanEatenScore
+            score += PACMAN_EATEN_SCORE
             solution += f"{moveCount}: W moving {ghostMove}\n"
             currentLayout[ghostPos[0]][ghostPos[1]] = 'W'
             solution += '\n'.join(''.join(row) for row in currentLayout) + '\n'
@@ -104,18 +100,15 @@ def random_play_single_ghost(problem):
 
         # Place ghost in new position
         currentLayout[ghostPos[0]][ghostPos[1]] = 'W'
-
         solution += f"{moveCount}: W moving {ghostMove}\n"
         solution += '\n'.join(''.join(row) for row in currentLayout) + '\n'
         solution += f"score: {score}\n"
 
-
-def getValidMoves(layout, position):
+def getValidMoves(layout, position) -> List[str]:
     """Return list of valid moves from current position"""
     row, col = position
     moves = []
 
-    # Check all four directions
     if layout[row - 1][col] != '%':  # North
         moves.append('N')
     if layout[row][col + 1] != '%':  # East
@@ -126,19 +119,18 @@ def getValidMoves(layout, position):
         moves.append('W')
 
     return moves
-    return solution
 
-def applyMove(position, move):
+def applyMove(position, move) -> (int, int):
     """Apply a move to a position and return new position"""
     row, col = position
     if move == 'N':
-        return (row - 1, col)
+        return row - 1, col
     elif move == 'E':
-        return (row, col + 1)
+        return row, col + 1
     elif move == 'S':
-        return (row + 1, col)
+        return row + 1, col
     elif move == 'W':
-        return (row, col - 1)
+        return row, col - 1
     return position
 
 if __name__ == "__main__":
