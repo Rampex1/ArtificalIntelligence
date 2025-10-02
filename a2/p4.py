@@ -1,21 +1,22 @@
 import sys, parse
 import time, os, copy
+import random
 
 def better_play_multiple_ghosts(problem):
     #Your p4 code here
-    currentLayout = [list(row) for row in problem['layout']]
 
     # Score constants
-    eatFoodScore = 10
-    pacmanEatenScore = -500
-    pacmanWinScore = 500
-    pacmanMovingScore = -1
+    EAT_FOOD_SCORE = 10
+    PACMAN_EATEN_SCORE = -500
+    PACMAN_WIN_SCORE = 500
+    PACMAN_MOVING_SCORE = -1
 
     # Find initial positions
     pacmanPos = None
     ghostPositions = {}
     foodPositions = set()
 
+    currentLayout = [list(row) for row in problem['layout']]
     for row in range(len(currentLayout)):
         for col in range(len(currentLayout[row])):
             cell = currentLayout[row][col]
@@ -36,11 +37,14 @@ def better_play_multiple_ghosts(problem):
     # Game loop
     while True:
         moveCount += 1
-
-        # Pacman's turn with evaluation
+        # ---------------- PACMAN TURN ----------------
         pacmanMoves = getValidMoves(currentLayout, pacmanPos, ghostPositions)
         if not pacmanMoves:
-            break
+            score += PACMAN_EATEN_SCORE
+            solution += f"{moveCount}: Pacman has no moves (trapped)\n"
+            solution += '\n'.join(''.join(row) for row in currentLayout) + '\n'
+            solution += f"score: {score}\nWIN: Ghost"
+            return solution, 'Ghost'
 
         # Choose best move
         bestMove = None
@@ -59,14 +63,14 @@ def better_play_multiple_ghosts(problem):
         currentLayout[pacmanPos[0]][pacmanPos[1]] = ' '
 
         if newPacmanPos in foodPositions:
-            score += eatFoodScore
+            score += EAT_FOOD_SCORE
             foodPositions.remove(newPacmanPos)
 
-        score += pacmanMovingScore
+        score += PACMAN_MOVING_SCORE
         pacmanPos = newPacmanPos
 
         if pacmanPos in ghostPositions.values():
-            score += pacmanEatenScore
+            score += PACMAN_EATEN_SCORE
             solution += f"{moveCount}: P moving {pacmanMove}\n"
             solution += '\n'.join(''.join(row) for row in currentLayout) + '\n'
             solution += f"score: {score}\nWIN: Ghost"
@@ -79,18 +83,17 @@ def better_play_multiple_ghosts(problem):
         solution += f"score: {score}\n"
 
         if not foodPositions:
-            score += pacmanWinScore
+            score += PACMAN_WIN_SCORE
             solution += "WIN: Pacman"
             return solution, 'Pacman'
 
-        # Ghosts' turns
+        # ---------------- GHOSTS TURN ----------------
         for ghostChar in ghostOrder:
             moveCount += 1
             ghostPos = ghostPositions[ghostChar]
 
             ghostMoves = getValidMoves(currentLayout, ghostPos, ghostPositions, ghostChar)
-            if not ghostMoves:
-                continue
+            if not ghostMoves: continue
 
             ghostMove = random.choice(ghostMoves)
             newGhostPos = applyMove(ghostPos, ghostMove)
@@ -100,7 +103,7 @@ def better_play_multiple_ghosts(problem):
             ghostPos = newGhostPos
 
             if ghostPos == pacmanPos:
-                score += pacmanEatenScore
+                score += PACMAN_EATEN_SCORE
                 solution += f"{moveCount}: {ghostChar} moving {ghostMove}\n"
                 currentLayout[ghostPos[0]][ghostPos[1]] = ghostChar
                 solution += '\n'.join(''.join(row) for row in currentLayout) + '\n'
@@ -115,23 +118,25 @@ def better_play_multiple_ghosts(problem):
 
 
 def evaluatePosition(pacmanPos, ghostPositions, foodPositions):
-    """Evaluate quality of a position for Pacman with multiple ghosts"""
+    """
+    Evaluate quality of a position for Pacman
+
+    It first calculates the Manhattan distance from the Pacman to the closest food and ghost
+    It then returns a value associated to the move. The higher, the better
+    """
+
     if not foodPositions:
         return 1000
 
-    # Distance to closest food
     minFoodDist = min(manhattanDistance(pacmanPos, food) for food in foodPositions)
-
-    # Distance to closest ghost
     minGhostDist = min(manhattanDistance(pacmanPos, gPos) for gPos in ghostPositions.values())
 
-    # Strong penalty for being near ghosts
+    # Penalty for being near ghost
     if minGhostDist <= 1:
         return -1000
     elif minGhostDist <= 2:
         return -500
 
-    # Balance food attraction and ghost avoidance
     return 150 / (minFoodDist + 1) + minGhostDist * 3
 
 

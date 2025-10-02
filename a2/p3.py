@@ -39,7 +39,12 @@ def random_play_multiple_ghosts(problem):
 
         # ---------------- PACMAN TURN ----------------
         pacmanMoves = getValidMoves(currentLayout, pacmanPos, ghostPositions)
-        if not pacmanMoves: break
+        if not pacmanMoves:
+            score += PACMAN_EATEN_SCORE
+            solution += f"{moveCount}: Pacman has no moves (trapped)\n"
+            solution += '\n'.join(''.join(row) for row in currentLayout) + '\n'
+            solution += f"score: {score}\nWIN: Ghost"
+            return solution, 'Ghost'
 
         pacmanMove = random.choice(sorted(pacmanMoves))
         newPacmanPos = applyMove(pacmanPos, pacmanMove)
