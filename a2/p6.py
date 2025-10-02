@@ -1,23 +1,23 @@
 import sys, parse
 import time, os, copy
-from random import random
+import random
 
 
 def expecti_max_multiple_ghosts(problem, k):
     #Your p6 code here
-    currentLayout = [list(row) for row in problem['layout']]
 
     # Score constants
-    eatFoodScore = 10
-    pacmanEatenScore = -500
-    pacmanWinScore = 500
-    pacmanMovingScore = -1
+    EAT_FOOD_SCORE = 10
+    PACMAN_EATEN_SCORE = -500
+    PACMAN_WIN_SCORE = 500
+    PACMAN_MOVING_SCORE = -1
 
     # Find initial positions
     pacmanPos = None
     ghostPositions = {}
     foodPositions = set()
 
+    currentLayout = [list(row) for row in problem['layout']]
     for row in range(len(currentLayout)):
         for col in range(len(currentLayout[row])):
             cell = currentLayout[row][col]
@@ -39,12 +39,15 @@ def expecti_max_multiple_ghosts(problem, k):
     while True:
         moveCount += 1
 
-        # Pacman's turn using expectimax
+        # ---------------- PACMAN TURN ----------------
         pacmanMoves = getValidMoves(currentLayout, pacmanPos, ghostPositions)
         if not pacmanMoves:
-            break
+            score += PACMAN_EATEN_SCORE
+            solution += f"{moveCount}: Pacman has no moves (trapped)\n"
+            solution += '\n'.join(''.join(row) for row in currentLayout) + '\n'
+            solution += f"score: {score}\nWIN: Ghost"
+            return solution, 'Ghost'
 
-        # Run expectimax to find best move
         bestMove = None
         bestValue = float('-inf')
 
@@ -75,14 +78,14 @@ def expecti_max_multiple_ghosts(problem, k):
         currentLayout[pacmanPos[0]][pacmanPos[1]] = ' '
 
         if newPacmanPos in foodPositions:
-            score += eatFoodScore
+            score += EAT_FOOD_SCORE
             foodPositions.remove(newPacmanPos)
 
-        score += pacmanMovingScore
+        score += PACMAN_MOVING_SCORE
         pacmanPos = newPacmanPos
 
         if pacmanPos in ghostPositions.values():
-            score += pacmanEatenScore
+            score += PACMAN_EATEN_SCORE
             solution += f"{moveCount}: P moving {pacmanMove}\n"
             solution += '\n'.join(''.join(row) for row in currentLayout) + '\n'
             solution += f"score: {score}\nWIN: Ghost"
@@ -95,11 +98,11 @@ def expecti_max_multiple_ghosts(problem, k):
         solution += f"score: {score}\n"
 
         if not foodPositions:
-            score += pacmanWinScore
+            score += PACMAN_WIN_SCORE
             solution += "WIN: Pacman"
             return solution, 'Pacman'
 
-        # Ghosts' turns with random movement
+        # ---------------- GHOSTS TURN ----------------
         for ghostChar in ghostOrder:
             moveCount += 1
             ghostPos = ghostPositions[ghostChar]
@@ -116,7 +119,7 @@ def expecti_max_multiple_ghosts(problem, k):
             ghostPos = newGhostPos
 
             if ghostPos == pacmanPos:
-                score += pacmanEatenScore
+                score += PACMAN_EATEN_SCORE
                 solution += f"{moveCount}: {ghostChar} moving {ghostMove}\n"
                 currentLayout[ghostPos[0]][ghostPos[1]] = ghostChar
                 solution += '\n'.join(''.join(row) for row in currentLayout) + '\n'
