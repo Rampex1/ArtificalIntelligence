@@ -5,18 +5,17 @@ def random_play_multiple_ghosts(problem):
     random.seed(problem['seed'], version=1)
 
     # Score constants
-    eatFoodScore = 10
-    pacmanEatenScore = -500
-    pacmanWinScore = 500
-    pacmanMovingScore = -1
-
-    currentLayout = [list(row) for row in problem['layout']]
+    EAT_FOOD_SCORE = 10
+    PACMAN_EATEN_SCORE = -500
+    PACMAN_WIN_SCORE = 500
+    PACMAN_MOVING_SCORE = -1
 
     # Find initial positions
     pacmanPos = None
-    ghostPositions = {}  # Maps ghost character to position
+    ghostPositions = {}
     foodPositions = set()
 
+    currentLayout = [list(row) for row in problem['layout']]
     for row in range(len(currentLayout)):
         for col in range(len(currentLayout[row])):
             cell = currentLayout[row][col]
@@ -35,14 +34,12 @@ def random_play_multiple_ghosts(problem):
 
     ghostOrder = sorted(ghostPositions.keys())
 
-    # Game loop
     while True:
         moveCount += 1
 
         # ---------------- PACMAN TURN ----------------
         pacmanMoves = getValidMoves(currentLayout, pacmanPos, ghostPositions)
-        if not pacmanMoves:
-            break
+        if not pacmanMoves: break
 
         pacmanMove = random.choice(sorted(pacmanMoves))
         newPacmanPos = applyMove(pacmanPos, pacmanMove)
@@ -52,29 +49,29 @@ def random_play_multiple_ghosts(problem):
 
         # Eat food if present
         if newPacmanPos in foodPositions:
-            score += eatFoodScore
+            score += EAT_FOOD_SCORE
             foodPositions.remove(newPacmanPos)
 
-        score += pacmanMovingScore
+        score += PACMAN_MOVING_SCORE
         pacmanPos = newPacmanPos
 
-        # ✅ Check collision BEFORE drawing Pacman
+        # Check collision
         if pacmanPos in ghostPositions.values():
-            score += pacmanEatenScore
+            score += PACMAN_EATEN_SCORE
             solution += f"{moveCount}: P moving {pacmanMove}\n"
             solution += '\n'.join(''.join(row) for row in currentLayout) + '\n'
             solution += f"score: {score}\nWIN: Ghost"
             return solution
 
-        # Now safe to draw Pacman
+        # Draw Pacman
         currentLayout[pacmanPos[0]][pacmanPos[1]] = 'P'
 
         solution += f"{moveCount}: P moving {pacmanMove}\n"
         solution += '\n'.join(''.join(row) for row in currentLayout) + '\n'
 
-        # ✅ Apply win bonus before printing score
+        # Winning scenario
         if not foodPositions:
-            score += pacmanWinScore
+            score += PACMAN_WIN_SCORE
             solution += f"score: {score}\nWIN: Pacman"
             return solution
 
@@ -103,7 +100,7 @@ def random_play_multiple_ghosts(problem):
 
             # Ghost catches Pacman
             if ghostPos == pacmanPos:
-                score += pacmanEatenScore
+                score += PACMAN_EATEN_SCORE
                 solution += f"{moveCount}: {ghostChar} moving {ghostMove}\n"
                 currentLayout[ghostPos[0]][ghostPos[1]] = ghostChar
                 solution += '\n'.join(''.join(row) for row in currentLayout) + '\n'
@@ -116,7 +113,6 @@ def random_play_multiple_ghosts(problem):
             solution += '\n'.join(''.join(row) for row in currentLayout) + '\n'
             solution += f"score: {score}\n"
 
-    # Safety fallback
     solution += f"score: {score}\nWIN: Ghost"
     return solution
 
@@ -128,12 +124,11 @@ def getValidMoves(layout, position, ghostPositions, currentGhost=None):
 
     occupiedPositions = set()
     if currentGhost:
-        # For ghosts, don’t allow stepping on *other* ghosts
+        # Ghosts are not allowed to step on other ghosts
         for ghost, pos in ghostPositions.items():
             if ghost != currentGhost:
                 occupiedPositions.add(pos)
     else:
-        # For Pacman, DO NOT block ghost positions
         occupiedPositions = set()
 
     if layout[row - 1][col] != '%' and (row - 1, col) not in occupiedPositions:

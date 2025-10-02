@@ -1,23 +1,22 @@
 import sys, parse
 import time, os, copy
+from typing import List
 
 def better_play_single_ghosts(problem):
     #Your p2 code here
 
-    # Copy layout for manipulation
-    currentLayout = [list(row) for row in problem['layout']]
-
-    # Score constants
-    eatFoodScore = 10
-    pacmanEatenScore = -500
-    pacmanWinScore = 500
-    pacmanMovingScore = -1
+    # Constants
+    EAT_FOOD_SCORE = 10
+    PACMAN_EATEN_SCORE = -500
+    PACMAN_WIN_SCORE = 500
+    PACMAN_MOVING_SCORE = -1
 
     # Find initial positions
     pacmanPos = None
     ghostPos = None
     foodPositions = set()
 
+    currentLayout = [list(row) for row in problem['layout']]
     for row in range(len(currentLayout)):
         for col in range(len(currentLayout[row])):
             if currentLayout[row][col] == 'P':
@@ -33,16 +32,14 @@ def better_play_single_ghosts(problem):
     score = 0
     moveCount = 0
 
-    # Game loop
     while True:
         moveCount += 1
 
-        # Pacman's turn - use evaluation function
+        # ---------------- PACMAN TURN ----------------
         pacmanMoves = getValidMoves(currentLayout, pacmanPos)
-        if not pacmanMoves:
-            break
+        if not pacmanMoves: break
 
-        # Choose best move based on evaluation
+        # Determine best move
         bestMove = None
         bestValue = float('-inf')
 
@@ -59,14 +56,14 @@ def better_play_single_ghosts(problem):
         currentLayout[pacmanPos[0]][pacmanPos[1]] = ' '
 
         if newPacmanPos in foodPositions:
-            score += eatFoodScore
+            score += EAT_FOOD_SCORE
             foodPositions.remove(newPacmanPos)
 
-        score += pacmanMovingScore
+        score += PACMAN_MOVING_SCORE
         pacmanPos = newPacmanPos
 
         if pacmanPos == ghostPos:
-            score += pacmanEatenScore
+            score += PACMAN_EATEN_SCORE
             solution += f"{moveCount}: P moving {pacmanMove}\n"
             solution += '\n'.join(''.join(row) for row in currentLayout) + '\n'
             solution += f"score: {score}\nWIN: Ghost"
@@ -79,13 +76,13 @@ def better_play_single_ghosts(problem):
         solution += f"score: {score}\n"
 
         if not foodPositions:
-            score += pacmanWinScore
+            score += PACMAN_WIN_SCORE
             solution += "WIN: Pacman"
             return solution, 'Pacman'
 
         moveCount += 1
 
-        # Ghost's turn - random movement
+        # ---------------- GHOST TURN ----------------
         import random
         ghostMoves = getValidMoves(currentLayout, ghostPos)
         if not ghostMoves:
@@ -98,7 +95,7 @@ def better_play_single_ghosts(problem):
         ghostPos = newGhostPos
 
         if ghostPos == pacmanPos:
-            score += pacmanEatenScore
+            score += PACMAN_EATEN_SCORE
             solution += f"{moveCount}: W moving {ghostMove}\n"
             currentLayout[ghostPos[0]][ghostPos[1]] = 'W'
             solution += '\n'.join(''.join(row) for row in currentLayout) + '\n'
@@ -112,31 +109,28 @@ def better_play_single_ghosts(problem):
         solution += f"score: {score}\n"
 
 
-def evaluatePosition(pacmanPos, ghostPos, foodPositions):
-    """Evaluate quality of a position for Pacman"""
-    if not foodPositions:
-        return 1000
+def evaluatePosition(pacmanPos, ghostPos, foodPositions) -> float:
+    """
+    Evaluate quality of a position for Pacman
 
-    # Calculate distance to closest food
+    It first calculates the Manhattan distance from the Pacman to the closest food and ghost
+    It then returns a value associated to the move. The higher, the better
+    """
+    if not foodPositions: return 1000
+
     minFoodDist = min(manhattanDistance(pacmanPos, food) for food in foodPositions)
-
-    # Calculate distance to ghost
     ghostDist = manhattanDistance(pacmanPos, ghostPos)
 
-    # Heavily penalize getting too close to ghost
-    if ghostDist <= 1:
-        return -1000
-
-    # Prefer positions closer to food and farther from ghost
+    if ghostDist <= 1: return -1000
     return 100 / (minFoodDist + 1) + ghostDist * 2
 
 
-def manhattanDistance(pos1, pos2):
+def manhattanDistance(pos1, pos2) -> int:
     """Calculate Manhattan distance between two positions"""
     return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
 
 
-def getValidMoves(layout, position):
+def getValidMoves(layout, position) -> List[str]:
     """Return list of valid moves from current position"""
     row, col = position
     moves = []
@@ -153,17 +147,17 @@ def getValidMoves(layout, position):
     return moves
 
 
-def applyMove(position, move):
+def applyMove(position, move) -> (int, int):
     """Apply a move to a position and return new position"""
     row, col = position
     if move == 'N':
-        return (row - 1, col)
+        return row - 1, col
     elif move == 'E':
-        return (row, col + 1)
+        return row, col + 1
     elif move == 'S':
-        return (row + 1, col)
+        return row + 1, col
     elif move == 'W':
-        return (row, col - 1)
+        return row, col - 1
     return position
 
 if __name__ == "__main__":

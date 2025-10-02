@@ -11,7 +11,6 @@ def random_play_single_ghost(problem):
     PACMAN_WIN_SCORE = 500
     PACMAN_MOVING_SCORE = -1
 
-
     # Find initial positions
     pacmanPos = None
     ghostPos = None
