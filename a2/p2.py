@@ -42,7 +42,7 @@ def better_play_single_ghosts(problem):
             solution += f"{moveCount}: Pacman has no moves (trapped)\n"
             solution += '\n'.join(''.join(row) for row in currentLayout) + '\n'
             solution += f"score: {score}\nWIN: Ghost"
-            return solution, 'Ghost'
+            return solution
 
         # Determine best move
         bestMove = None
@@ -72,7 +72,7 @@ def better_play_single_ghosts(problem):
             solution += f"{moveCount}: P moving {pacmanMove}\n"
             solution += '\n'.join(''.join(row) for row in currentLayout) + '\n'
             solution += f"score: {score}\nWIN: Ghost"
-            return solution, 'Ghost'
+            return solution
 
         currentLayout[pacmanPos[0]][pacmanPos[1]] = 'P'
 
@@ -82,8 +82,8 @@ def better_play_single_ghosts(problem):
 
         if not foodPositions:
             score += PACMAN_WIN_SCORE
-            solution += "WIN: Pacman"
-            return solution, 'Pacman'
+            solution += f"score: {score}\nWIN: Pacman"
+            return solution
 
         moveCount += 1
 
@@ -105,7 +105,7 @@ def better_play_single_ghosts(problem):
             currentLayout[ghostPos[0]][ghostPos[1]] = 'W'
             solution += '\n'.join(''.join(row) for row in currentLayout) + '\n'
             solution += f"score: {score}\nWIN: Ghost"
-            return solution, 'Ghost'
+            return solution
 
         currentLayout[ghostPos[0]][ghostPos[1]] = 'W'
 

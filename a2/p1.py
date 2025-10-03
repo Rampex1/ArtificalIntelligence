@@ -42,7 +42,7 @@ def random_play_single_ghost(problem):
             solution += f"{moveCount}: Pacman has no moves (trapped)\n"
             solution += '\n'.join(''.join(row) for row in currentLayout) + '\n'
             solution += f"score: {score}\nWIN: Ghost"
-            return solution, 'Ghost'
+            return solution
 
         pacmanMove = random.choice(sorted(pacmanMoves))
         newPacmanPos = applyMove(pacmanPos, pacmanMove)

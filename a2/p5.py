@@ -31,16 +31,8 @@ def min_max_multiple_ghosts(problem, k):
     moveCount = 0
     ghostOrder = sorted(ghostPositions.keys())
 
-    # Debugging
-    moveLimit = 500
-
     while True:
         moveCount += 1
-
-        if moveCount > moveLimit:
-            solution += f"Game exceeded {moveLimit} moves\n"
-            solution += f"score: {score}\nWIN: Ghost"
-            return solution, 'Ghost'
 
         # ---------------- PACMAN TURN ----------------
         pacmanMoves = getValidMoves(currentLayout, pacmanPos, ghostPositions)
@@ -49,7 +41,7 @@ def min_max_multiple_ghosts(problem, k):
             solution += f"{moveCount}: Pacman has no moves (trapped)\n"
             solution += '\n'.join(''.join(row) for row in currentLayout) + '\n'
             solution += f"score: {score}\nWIN: Ghost"
-            return solution, 'Ghost'
+            return solution
 
         # Run minimax to find best move
         bestMove = None
@@ -66,7 +58,7 @@ def min_max_multiple_ghosts(problem, k):
             if newPacmanPos in newFoodPos:
                 newFoodPos.remove(newPacmanPos)
 
-            # Evaluate using minimax (depth k means k full rounds)
+            # Evaluate using minimax
             value = minimaxValue(newPacmanPos, ghostPositions, newFoodPos,
                                  currentLayout, k, False, 0, ghostOrder, 0)
 
@@ -75,7 +67,6 @@ def min_max_multiple_ghosts(problem, k):
                 bestMove = move
 
         if bestMove is None:
-            # All moves lead to immediate capture
             bestMove = pacmanMoves[0]
 
         pacmanMove = bestMove
@@ -95,7 +86,7 @@ def min_max_multiple_ghosts(problem, k):
             solution += f"{moveCount}: P moving {pacmanMove}\n"
             solution += '\n'.join(''.join(row) for row in currentLayout) + '\n'
             solution += f"score: {score}\nWIN: Ghost"
-            return solution, 'Ghost'
+            return solution
 
         currentLayout[pacmanPos[0]][pacmanPos[1]] = 'P'
 
@@ -106,7 +97,7 @@ def min_max_multiple_ghosts(problem, k):
         if not foodPositions:
             score += PACMAN_WIN_SCORE
             solution += "WIN: Pacman"
-            return solution, 'Pacman'
+            return solution
 
         # ---------------- GHOSTS TURN ----------------
         for ghostChar in ghostOrder:
@@ -124,16 +115,11 @@ def min_max_multiple_ghosts(problem, k):
             for move in ghostMoves:
                 newGhostPos = applyMove(ghostPos, move)
 
-                # DEBUG
-                if ghostChar == 'Z' and moveCount == 55:
-                    print(f"DEBUG: Z at {ghostPos}, considering move {move} to {newGhostPos}, Pacman at {pacmanPos}")
-
-                # CHECK FOR IMMEDIATE CAPTURE
+                # Check for immediate capture
                 if newGhostPos == pacmanPos:
-                    # This is a winning move for ghosts - assign best value
-                    bestGhostValue = -1000
+                    # This is a winning move for ghosts
                     bestGhostMove = move
-                    break  # No need to check other moves
+                    break
 
                 newGhostPositions = ghostPositions.copy()
                 newGhostPositions[ghostChar] = newGhostPos
@@ -167,7 +153,7 @@ def min_max_multiple_ghosts(problem, k):
                 currentLayout[ghostPos[0]][ghostPos[1]] = ghostChar
                 solution += '\n'.join(''.join(row) for row in currentLayout) + '\n'
                 solution += f"score: {score}\nWIN: Ghost"
-                return solution, 'Ghost'
+                return solution
 
             currentLayout[ghostPos[0]][ghostPos[1]] = ghostChar
 
@@ -205,7 +191,7 @@ def minimaxValue(pacmanPos, ghostPositions, foodPositions, layout, depth,
             if newPos in newFood:
                 newFood.remove(newPos)
 
-            # After Pacman moves, first ghost moves (still same depth)
+            # After Pacman moves, first ghost moves
             value = minimaxValue(newPos, ghostPositions, newFood, layout,
                                  depth, False, 0, ghostOrder, callDepth + 1)
             maxValue = max(maxValue, value)
@@ -216,7 +202,6 @@ def minimaxValue(pacmanPos, ghostPositions, foodPositions, layout, depth,
     else:
         if ghostIndex >= len(ghostOrder):
             # All ghosts have moved, NOW decrease depth and return to Pacman
-            # FIXED: Check if we should continue searching
             if depth <= 1:
                 # No more depth to search after this round
                 return evaluateState(pacmanPos, ghostPositions, foodPositions, layout)
@@ -241,7 +226,7 @@ def minimaxValue(pacmanPos, ghostPositions, foodPositions, layout, depth,
             newGhostPositions[ghostChar] = newGhostPos
 
             if newGhostPos == pacmanPos:
-                value = -1000  # This IS being checked, but...
+                value = -1000
             else:
                 value = minimaxValue(pacmanPos, newGhostPositions, foodPositions, layout,
                                      depth, False, ghostIndex + 1, ghostOrder, callDepth + 1)
@@ -252,40 +237,29 @@ def minimaxValue(pacmanPos, ghostPositions, foodPositions, layout, depth,
 
 
 def evaluateState(pacmanPos, ghostPositions, foodPositions, layout):
-    # 1. Base Terminal/Win Check (not strictly necessary here, but good practice)
     if not foodPositions:
-        return 1000
+        return 1000  # Pacman wins
 
-    # 2. Distance Calculations
     minFoodDist = min(manhattanDistance(pacmanPos, food) for food in foodPositions)
     minGhostDist = min(manhattanDistance(pacmanPos, gPos) for gPos in ghostPositions.values())
 
-    # 3. Calculate Score Components
-
-    # Food Attraction: Strong incentive to move towards the nearest food.
-    # Inverse distance for attraction (higher score when closer to food).
+    # Food attraction (positive for being close to food)
     food_score = 100.0 / (minFoodDist + 1)
 
-    # Ghost Repulsion: Strong penalty when close to a ghost.
-    # Use squared distance to make the close proximity penalty steep.
-    if minGhostDist <= 1:
-        # Extreme penalty, but not -500, to allow comparison with other options
-        ghost_score = -500
+    # Ghost danger
+    if minGhostDist == 0:
+        ghost_score = -1000
+    elif minGhostDist == 1:
+        ghost_score = -500   #
+    elif minGhostDist == 2:
+        ghost_score = -200
     else:
-        # Steeply increasing positive score as distance increases
-        ghost_score = (minGhostDist ** 2) * 20
+        ghost_score = -50 / minGhostDist
 
-    # Food Remaining Penalty: A mild penalty for uncollected food.
     food_count_penalty = -len(foodPositions) * 10
 
-    # Mobility Bonus: Prefer states with more escape routes.
-    # NOTE: You'd need to pass 'layout' into evaluateState to calculate this.
-    # valid_moves = len(getValidMoves(layout, pacmanPos, ghostPositions))
-    # mobility_score = valid_moves * 5
-
-    # 4. Final Combination
     result = food_score + ghost_score + food_count_penalty
-    return max(-999, result)
+    return result
 
 
 def manhattanDistance(pos1, pos2):
