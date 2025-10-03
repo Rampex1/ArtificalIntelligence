@@ -41,7 +41,7 @@ def min_max_multiple_ghosts(problem, k):
             solution += f"{moveCount}: Pacman has no moves (trapped)\n"
             solution += '\n'.join(''.join(row) for row in currentLayout) + '\n'
             solution += f"score: {score}\nWIN: Ghost"
-            return solution
+            return solution, 'Ghost'
 
         # Run minimax to find best move
         bestMove = None
@@ -86,7 +86,7 @@ def min_max_multiple_ghosts(problem, k):
             solution += f"{moveCount}: P moving {pacmanMove}\n"
             solution += '\n'.join(''.join(row) for row in currentLayout) + '\n'
             solution += f"score: {score}\nWIN: Ghost"
-            return solution
+            return solution, 'Ghost'
 
         currentLayout[pacmanPos[0]][pacmanPos[1]] = 'P'
 
@@ -96,8 +96,8 @@ def min_max_multiple_ghosts(problem, k):
 
         if not foodPositions:
             score += PACMAN_WIN_SCORE
-            solution += "WIN: Pacman"
-            return solution
+            solution += f"score: {score}\nWIN: Pacman"
+            return solution, 'Pacman'
 
         # ---------------- GHOSTS TURN ----------------
         for ghostChar in ghostOrder:
@@ -153,7 +153,7 @@ def min_max_multiple_ghosts(problem, k):
                 currentLayout[ghostPos[0]][ghostPos[1]] = ghostChar
                 solution += '\n'.join(''.join(row) for row in currentLayout) + '\n'
                 solution += f"score: {score}\nWIN: Ghost"
-                return solution
+                return solution, 'Ghost'
 
             currentLayout[ghostPos[0]][ghostPos[1]] = ghostChar
 

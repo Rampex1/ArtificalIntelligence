@@ -99,7 +99,7 @@ def expecti_max_multiple_ghosts(problem, k):
 
         if not foodPositions:
             score += PACMAN_WIN_SCORE
-            solution += "WIN: Pacman"
+            solution += f"score: {score}\nWIN: Pacman"
             return solution, 'Pacman'
 
         # ---------------- GHOSTS TURN ----------------
