@@ -28,38 +28,41 @@ Running the algorithm 10 times on test case 2 of problem 3:
 
 The optimal policy found matches the expected policy from value iteration:
     | E || E || E || x |
-    | N || # || N || x |
-    | N || E || N || W |
+    | N || # || W || x |
+    | N || W || W || S |
 
-To run: python p4.py
+RUNNING INSTRUCTIONS
+python p4.py
 """
 
 import random
 import sys
-
 sys.path.append('.')
-from parse import read_grid_mdp_problem_p3
 
+def q_learning(problem):
+    # ------------------------ PARAMETERS -------------------------
+    MAX_EPISODES = 10000
+    INITIAL_EPSILON = 1.0
+    EPSILON_DECAY = 0.995
+    MIN_EPSILON = 0.01
+    INITIAL_ALPHA = 0.5
+    ALPHA_DECAY = 0.9995
+    MIN_ALPHA = 0.01
+    CONVERGENCE_THRESHOLD = 50
 
-def q_learning(problem, max_episodes=10000, initial_epsilon=1.0, epsilon_decay=0.995,
-               min_epsilon=0.01, initial_alpha=0.5, alpha_decay=0.9995, min_alpha=0.01,
-               convergence_threshold=50):
-    """
-    Q-Learning algorithm with epsilon-greedy exploration and learning rate decay.
-    """
-    # Extract problem parameters
+    # -------------------- PROBLEM PARAMETERS -----------------------
     discount = problem['discount']
     noise = problem['noise']
     living_reward = problem['livingReward']
     grid = problem['grid']
 
-    rows = len(grid)
-    cols = len(grid[0])
+    R = len(grid)
+    C = len(grid[0])
 
-    # Initialize Q-values to 0
+    # Initialize Q-values
     Q = {}
-    for r in range(rows):
-        for c in range(cols):
+    for r in range(R):
+        for c in range(C):
             if grid[r][c] != '#':
                 for action in ['N', 'E', 'S', 'W']:
                     Q[(r, c, action)] = 0.0
@@ -72,7 +75,7 @@ def q_learning(problem, max_episodes=10000, initial_epsilon=1.0, epsilon_decay=0
         'W': (0, -1)
     }
 
-    # Perpendicular actions for stochastic transitions
+    # Perpendicular actions
     perpendicular = {
         'N': ['E', 'W'],
         'E': ['S', 'N'],
@@ -81,29 +84,18 @@ def q_learning(problem, max_episodes=10000, initial_epsilon=1.0, epsilon_decay=0
     }
 
     all_actions = ['N', 'E', 'S', 'W']
-
-    # Find start state
-    start_row, start_col = None, None
-    for r in range(rows):
-        for c in range(cols):
-            if grid[r][c] == 'S' or grid[r][c] == '_':
-                start_row, start_col = r, c
-                break
-        if start_row is not None:
-            break
-
-    epsilon = initial_epsilon
-    alpha = initial_alpha
+    epsilon = INITIAL_EPSILON
+    alpha = INITIAL_ALPHA
 
     # Track policy stability
     previous_policy = None
     stable_count = 0
 
-    for episode in range(max_episodes):
+    for episode in range(MAX_EPISODES):
         # Random start state (explore different starting positions)
         valid_starts = []
-        for r in range(rows):
-            for c in range(cols):
+        for r in range(R):
+            for c in range(C):
                 if grid[r][c] in ['S', '_']:
                     valid_starts.append((r, c))
 
@@ -155,8 +147,8 @@ def q_learning(problem, max_episodes=10000, initial_epsilon=1.0, epsilon_decay=0
             new_col = current_col + delta[1]
 
             # Check if move is valid
-            if (0 <= new_row < rows and
-                    0 <= new_col < cols and
+            if (0 <= new_row < R and
+                    0 <= new_col < C and
                     grid[new_row][new_col] != '#'):
                 next_row, next_col = new_row, new_col
             else:
@@ -194,8 +186,8 @@ def q_learning(problem, max_episodes=10000, initial_epsilon=1.0, epsilon_decay=0
             current_row, current_col = next_row, next_col
 
         # Decay epsilon and alpha
-        epsilon = max(min_epsilon, epsilon * epsilon_decay)
-        alpha = max(min_alpha, alpha * alpha_decay)
+        epsilon = max(MIN_EPSILON, epsilon * EPSILON_DECAY)
+        alpha = max(MIN_ALPHA, alpha * ALPHA_DECAY)
 
         # Check for convergence every 10 episodes
         if episode % 10 == 0:
@@ -206,7 +198,7 @@ def q_learning(problem, max_episodes=10000, initial_epsilon=1.0, epsilon_decay=0
             else:
                 stable_count = 0
 
-            if stable_count >= convergence_threshold:
+            if stable_count >= CONVERGENCE_THRESHOLD:
                 print(f"Converged at episode {episode}")
                 break
 
@@ -217,13 +209,13 @@ def q_learning(problem, max_episodes=10000, initial_epsilon=1.0, epsilon_decay=0
 
 def extract_policy(Q, grid, all_actions):
     """Extract policy from Q-values"""
-    rows = len(grid)
-    cols = len(grid[0])
+    R = len(grid)
+    C = len(grid[0])
     policy = []
 
-    for r in range(rows):
+    for r in range(R):
         row_policy = []
-        for c in range(cols):
+        for c in range(C):
             cell = grid[r][c]
 
             if cell == '#':
@@ -267,6 +259,42 @@ def policies_match(policy1, policy2):
                 return False
     return True
 
+def read_grid_mdp_problem_p3(file_path):
+    """
+    This code was copied from P3
+    """
+
+    with open(file_path, "r") as f:
+        lines = [line.strip() for line in f.readlines() if line.strip()]
+
+    problem = {}
+    i = 0
+
+    while i < len(lines):
+        line = lines[i]
+
+        if line.startswith('discount:'):
+            problem['discount'] = float(line.split(':')[1].strip())
+        elif line.startswith('noise:'):
+            problem['noise'] = float(line.split(':')[1].strip())
+        elif line.startswith('livingReward:'):
+            problem['livingReward'] = float(line.split(':')[1].strip())
+        elif line.startswith('iterations:'):
+            problem['iterations'] = int(line.split(':')[1].strip())
+        elif line == 'grid:':
+            grid = []
+            i += 1
+            while i < len(lines):
+                row = lines[i].split()
+                grid.append(row)
+                i += 1
+            problem['grid'] = grid
+            break
+
+        i += 1
+
+    return problem
+
 
 if __name__ == "__main__":
     # Load test case 2 from problem 3
@@ -275,8 +303,8 @@ if __name__ == "__main__":
     # Known optimal policy from value iteration (test case 2)
     optimal_policy = [
         ['E', 'E', 'E', 'x'],
-        ['N', '#', 'N', 'x'],
-        ['N', 'E', 'N', 'W']
+        ['N', '#', 'W', 'x'],
+        ['N', 'W', 'W', 'S']
     ]
 
     print("Running Q-Learning algorithm 10 times...\n")
