@@ -44,7 +44,7 @@ def POLICY_evaluation(problem):
                 cell = GRID[r][c]
                 action = POLICY[r][c]
 
-                # CASE 1: Slip walls
+                # CASE 1: Skip walls
                 if cell == '#':
                     V_new[r][c] = 0.0
                     continue

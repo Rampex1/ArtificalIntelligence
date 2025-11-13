@@ -2,18 +2,17 @@ import sys, grader, parse
 
 
 def value_iteration(problem):
-    # Extract problem parameters
-    discount = problem['discount']
-    noise = problem['noise']
-    living_reward = problem['livingReward']
-    iterations = problem['iterations']
-    grid = problem['grid']
+    # ---------------------- PARAMETERS ----------------------
+    DISCOUNT = problem['discount']
+    NOISE = problem['noise']
+    LIVING_REWARD = problem['livingReward']
+    ITERATIONS = problem['iterations']
+    GRID = problem['grid']
 
-    rows = len(grid)
-    cols = len(grid[0])
-
-    # Initialize values to 0
-    V = [[0.0 for _ in range(cols)] for _ in range(rows)]
+    R = len(GRID)
+    C = len(GRID[0])
+    V = [[0.0 for _ in range(C)] for _ in range(R)]
+    all_actions = ['N', 'E', 'S', 'W']
 
     # Movement deltas
     move_delta = {
@@ -31,32 +30,28 @@ def value_iteration(problem):
         'W': ['N', 'S']
     }
 
-    # All possible actions
-    all_actions = ['N', 'E', 'S', 'W']
 
     return_value = ''
 
-    # Print initial values (k=0)
+    # -------------------- START ALGORITHM ----------------------------
     return_value += f"V_k=0\n"
-    return_value += print_values(V, grid)
+    return_value += print_values(V, GRID)
 
-    # Perform value iteration (iterations-1 because we already printed k=0)
-    for k in range(1, iterations):
-        V_new = [[0.0 for _ in range(cols)] for _ in range(rows)]
-        policy = [['' for _ in range(cols)] for _ in range(rows)]
+    for k in range(1, ITERATIONS):
+        V_new = [[0.0 for _ in range(C)] for _ in range(R)]
+        policy = [['' for _ in range(C)] for _ in range(R)]
 
-        for r in range(rows):
-            for c in range(cols):
-                cell = grid[r][c]
+        for r in range(R):
+            for c in range(C):
+                cell = GRID[r][c]
 
-                # Skip walls
+                # CASE 1: Skip walls
                 if cell == '#':
                     V_new[r][c] = 0.0
                     policy[r][c] = '#'
                     continue
 
-                # Check if terminal state (has a numeric reward)
-                is_terminal = False
+                # CASE 2: Terminal state
                 try:
                     terminal_reward = float(cell)
                     is_terminal = True
@@ -68,43 +63,38 @@ def value_iteration(problem):
                     policy[r][c] = 'x'
                     continue
 
-                # Non-terminal state - find best action
+                # CASE 3: Non-terminal state
                 max_value = float('-inf')
                 best_action = 'N'
 
                 for action in all_actions:
                     expected_value = 0.0
 
-                    # Determine possible action outcomes with probabilities
-                    if noise == 0:
-                        actions_probs = [(action, 1.0)]
-                    else:
-                        perp_actions = perpendicular[action]
-                        actions_probs = [
-                            (action, 1 - 2 * noise),
-                            (perp_actions[0], noise),
-                            (perp_actions[1], noise)
-                        ]
+                    # Determine possible action
+                    perp_actions = perpendicular[action]
+                    actions_probs = [
+                        (action, 1 - 2 * NOISE),
+                        (perp_actions[0], NOISE),
+                        (perp_actions[1], NOISE)
+                    ]
 
-                    # For each possible action outcome
+                    # Determine resulting state for each action
                     for actual_action, prob in actions_probs:
-                        # Determine resulting state
                         delta = move_delta[actual_action]
                         new_r = r + delta[0]
                         new_c = c + delta[1]
 
-                        # Check if move is valid
-                        if (0 <= new_r < rows and
-                                0 <= new_c < cols and
-                                grid[new_r][new_c] != '#'):
+                        # Check if move is valid else stay in place
+                        if (0 <= new_r < R and
+                                0 <= new_c < C and
+                                GRID[new_r][new_c] != '#'):
                             next_r, next_c = new_r, new_c
                         else:
-                            # Hit wall or boundary - stay in place
                             next_r, next_c = r, c
 
-                        # Add to expected value: P(s'|s,a) * [R(s,a,s') + γ*V(s')]
-                        reward = living_reward
-                        expected_value += prob * (reward + discount * V[next_r][next_c])
+                        # Add to expected value
+                        reward = LIVING_REWARD
+                        expected_value += prob * (reward + DISCOUNT * V[next_r][next_c])
 
                     # Update best action
                     if expected_value > max_value:
@@ -114,28 +104,27 @@ def value_iteration(problem):
                 V_new[r][c] = max_value
                 policy[r][c] = best_action
 
-        # Update V
+        # Update V and print iteration
         V = V_new
-
-        # Print values for this iteration
         return_value += f"V_k={k}\n"
-        return_value += print_values(V, grid)
-
-        # Print policy for this iteration
+        return_value += print_values(V, GRID)
         return_value += f"pi_k={k}\n"
-        return_value += print_policy(policy, grid)
+        return_value += print_policy(policy)
 
     return return_value[:-1]
 
 
-def print_values(V, grid):
+def print_values(V, GRID):
+    """
+    This helper function helps to print values in the expected output form
+    """
     output = ''
-    rows = len(V)
-    cols = len(V[0])
+    R = len(V)
+    C = len(V[0])
 
-    for r in range(rows):
-        for c in range(cols):
-            if grid[r][c] == '#':
+    for r in range(R):
+        for c in range(C):
+            if GRID[r][c] == '#':
                 output += '| ##### |'
             else:
                 output += '|{:7.2f}|'.format(V[r][c])
@@ -144,13 +133,16 @@ def print_values(V, grid):
     return output
 
 
-def print_policy(policy, grid):
+def print_policy(policy):
+    """
+    This helper function helps to print policy in the expected output form
+    """
     output = ''
-    rows = len(policy)
-    cols = len(policy[0])
+    R = len(policy)
+    C = len(policy[0])
 
-    for r in range(rows):
-        for c in range(cols):
+    for r in range(R):
+        for c in range(C):
             action = policy[r][c]
             output += '| {} |'.format(action)
         output += '\n'
