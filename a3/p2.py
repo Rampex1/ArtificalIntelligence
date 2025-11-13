@@ -1,20 +1,18 @@
 import sys, grader, parse
 
 
-def policy_evaluation(problem):
-    # Extract problem parameters
-    discount = problem['discount']
-    noise = problem['noise']
-    living_reward = problem['livingReward']
-    iterations = problem['iterations']
-    grid = problem['grid']
-    policy = problem['policy']
+def POLICY_evaluation(problem):
+    # ------------------- PARAMETERS ------------------------
+    DISCOUNT = problem['discount']
+    NOISE = problem['noise']
+    LIVING_REWARD = problem['livingReward']
+    ITERATIONS = problem['iterations']
+    GRID = problem['grid']
+    POLICY = problem['policy']
 
-    rows = len(grid)
-    cols = len(grid[0])
-
-    # Initialize values to 0
-    V = [[0.0 for _ in range(cols)] for _ in range(rows)]
+    R = len(GRID)
+    C = len(GRID[0])
+    V = [[0.0 for _ in range(C)] for _ in range(R)]
 
     # Movement deltas
     move_delta = {
@@ -34,25 +32,24 @@ def policy_evaluation(problem):
 
     return_value = ''
 
-    # Print initial values (k=0)
+    # ----------------------- START ALGORITHM -------------------
     return_value += f"V^pi_k=0\n"
-    return_value += print_values(V, grid)
+    return_value += print_values(V, GRID)
 
-    # Perform policy evaluation iterations - FIXED: run exactly 'iterations' times
-    for k in range(1, iterations):  # Change this line
-        V_new = [[0.0 for _ in range(cols)] for _ in range(rows)]
+    for k in range(1, ITERATIONS):
+        V_new = [[0.0 for _ in range(C)] for _ in range(R)]
 
-        for r in range(rows):
-            for c in range(cols):
-                cell = grid[r][c]
-                action = policy[r][c]
+        for r in range(R):
+            for c in range(C):
+                cell = GRID[r][c]
+                action = POLICY[r][c]
 
-                # Skip walls
+                # CASE 1: Slip walls
                 if cell == '#':
                     V_new[r][c] = 0.0
                     continue
 
-                # Terminal states (exit action)
+                # CASE 2: Terminal state
                 if action == 'exit':
                     try:
                         V_new[r][c] = float(cell)
@@ -60,60 +57,56 @@ def policy_evaluation(problem):
                         V_new[r][c] = 0.0
                     continue
 
-                # Non-terminal states - compute expected value
+                # CASE 3: Non-terminal state
                 expected_value = 0.0
 
-                # Determine possible actions with probabilities
-                if noise == 0:
-                    actions_probs = [(action, 1.0)]
-                else:
-                    perp_actions = perpendicular[action]
-                    actions_probs = [
-                        (action, 1 - 2 * noise),
-                        (perp_actions[0], noise),
-                        (perp_actions[1], noise)
-                    ]
+                # Determine possible actions
+                perp_actions = perpendicular[action]
+                actions_probs = [
+                    (action, 1 - 2 * NOISE),
+                    (perp_actions[0], NOISE),
+                    (perp_actions[1], NOISE)
+                ]
 
-                # For each possible action outcome
+                # Determine resulting state for each action
                 for actual_action, prob in actions_probs:
-                    # Determine resulting state
                     delta = move_delta[actual_action]
                     new_r = r + delta[0]
                     new_c = c + delta[1]
 
-                    # Check if move is valid
-                    if (0 <= new_r < rows and
-                            0 <= new_c < cols and
-                            grid[new_r][new_c] != '#'):
+                    # Check if move is valid, else stay in place
+                    if (0 <= new_r < R and
+                            0 <= new_c < C and
+                            GRID[new_r][new_c] != '#'):
                         next_r, next_c = new_r, new_c
                     else:
-                        # Hit wall or boundary - stay in place
                         next_r, next_c = r, c
 
-                    # Add to expected value: P(s'|s,a) * [R(s,a,s') + γ*V(s')]
-                    reward = living_reward
-                    expected_value += prob * (reward + discount * V[next_r][next_c])
+                    # Add to expected value
+                    reward = LIVING_REWARD
+                    expected_value += prob * (reward + DISCOUNT * V[next_r][next_c])
 
                 V_new[r][c] = expected_value
 
-        # Update V
+        # Update and print values
         V = V_new
-
-        # Print values for this iteration
         return_value += f"V^pi_k={k}\n"
-        return_value += print_values(V, grid)
+        return_value += print_values(V, GRID)
 
     return return_value[:-1]
 
 
-def print_values(V, grid):
+def print_values(V, GRID):
+    """
+    This helper function helps to print values in the expected output form
+    """
     output = ''
-    rows = len(V)
-    cols = len(V[0])
+    R = len(V)
+    C = len(V[0])
 
-    for r in range(rows):
-        for c in range(cols):
-            if grid[r][c] == '#':
+    for r in range(R):
+        for c in range(C):
+            if GRID[r][c] == '#':
                 output += '| ##### |'
             else:
                 output += '|{:7.2f}|'.format(V[r][c])
@@ -125,4 +118,4 @@ if __name__ == "__main__":
     test_case_id = int(sys.argv[1])
     #test_case_id = -7
     problem_id = 2
-    grader.grade(problem_id, test_case_id, policy_evaluation, parse.read_grid_mdp_problem_p2)
+    grader.grade(problem_id, test_case_id, POLICY_evaluation, parse.read_grid_mdp_problem_p2)

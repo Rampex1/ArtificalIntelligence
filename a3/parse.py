@@ -41,6 +41,8 @@ def read_grid_mdp_problem_p1(file_path):
 
 
 def read_grid_mdp_problem_p2(file_path):
+    #Your p2 code here
+
     with open(file_path, "r") as f:
         lines = [line.strip() for line in f.readlines() if line.strip()]
 
@@ -83,6 +85,7 @@ def read_grid_mdp_problem_p2(file_path):
 
 def read_grid_mdp_problem_p3(file_path):
     #Your p3 code here
+
     with open(file_path, "r") as f:
         lines = [line.strip() for line in f.readlines() if line.strip()]
 

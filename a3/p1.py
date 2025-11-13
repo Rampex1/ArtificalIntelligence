@@ -3,7 +3,7 @@ import random
 
 
 def play_episode(problem):
-    #----------------------- PARAMETERS ------------------------------
+    # ---------------------- PARAMETERS ------------------------------
     SEED = problem['seed']
     NOISE = problem['noise']
     LIVING_REWARD = problem['livingReward']
@@ -14,7 +14,7 @@ def play_episode(problem):
     random.seed(SEED, version=1)
 
 
-    #----------------------- VARIABLES -------------------------------
+    # ---------------------- VARIABLES -------------------------------
     start_row, start_col = find_start_state(GRID, R, C)
     current_row, current_col = start_row, start_col
     cumulative_reward = 0.0
