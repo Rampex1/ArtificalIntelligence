@@ -3,7 +3,7 @@ import random
 
 
 def play_episode(problem):
-    # Parameters
+    #----------------------- PARAMETERS ------------------------------
     SEED = problem['seed']
     NOISE = problem['noise']
     LIVING_REWARD = problem['livingReward']
@@ -14,7 +14,7 @@ def play_episode(problem):
     random.seed(SEED, version=1)
 
 
-    # Variables
+    #----------------------- VARIABLES -------------------------------
     start_row, start_col = find_start_state(GRID, R, C)
     current_row, current_col = start_row, start_col
     cumulative_reward = 0.0
@@ -36,7 +36,7 @@ def play_episode(problem):
         'W': (0, -1)
     }
 
-    # Print initial state
+    # ---------------------- START ALGORITHM ---------------------------
     experience += "Start state:\n"
     experience += print_grid(GRID, current_row, current_col)
     experience += f"Cumulative reward sum: {cumulative_reward}\n"
@@ -46,48 +46,40 @@ def play_episode(problem):
 
         # Terminal State
         if intended_action == 'exit':
-            experience += "-------------------------------------------- \n"
-            experience += f"Taking action: exit (intended: exit)\n"
-
             # Get reward
             cell_value = GRID[current_row][current_col]
             reward = float(cell_value)
 
             cumulative_reward += reward
+            experience += "-------------------------------------------- \n"
+            experience += "Taking action: exit (intended: exit)\n"
             experience += f"Reward received: {reward}\n"
             experience += "New state:\n"
             experience += print_grid(GRID, start_row, start_col, hide_player=True)
             experience += f"Cumulative reward sum: {round(cumulative_reward, 10)}"
             break
 
-        # Determine actual action with NOISE
-        if NOISE == 0:
-            actual_action = intended_action
-        else:
-            perp_actions = perpendicular[intended_action]
-            actual_action = random.choices(
-                population=[intended_action] + perp_actions,
-                weights=[1 - 2 * NOISE, NOISE, NOISE]
-            )[0]
+        # Determine move
+        perp_actions = perpendicular[intended_action]
+        actual_action = random.choices(
+            population=[intended_action] + perp_actions,
+            weights=[1 - 2 * NOISE, NOISE, NOISE]
+        )[0]
 
-        experience += "-------------------------------------------- \n"
-        experience += f"Taking action: {actual_action} (intended: {intended_action})\n"
-
-        # Try to move
+        # Perform move
         delta = move_delta[actual_action]
         new_row = current_row + delta[0]
         new_col = current_col + delta[1]
 
-        # Check if move is valid (not out of bounds, not a wall)
-        if (0 <= new_row < len(GRID) and
-                0 <= new_col < len(GRID[new_row]) and
-                GRID[new_row][new_col] != '#'):
+        if 0 <= new_row < len(GRID) and 0 <= new_col < len(GRID[new_row]) and GRID[new_row][new_col] != '#':
             current_row, current_col = new_row, new_col
 
-        # Get reward (living reward for non-terminal states)
+        # Get reward
         reward = LIVING_REWARD
         cumulative_reward += reward
 
+        experience += "-------------------------------------------- \n"
+        experience += f"Taking action: {actual_action} (intended: {intended_action})\n"
         experience += f"Reward received: {reward}\n"
         experience += "New state:\n"
         experience += print_grid(GRID, current_row, current_col)
@@ -96,6 +88,9 @@ def play_episode(problem):
     return experience
 
 def find_start_state(grid, row_count, col_count) -> (int, int):
+    """
+    This helper functions allows us to find the initial starting point of the player
+    """
     start_row, start_col = None, None
     for r in range(row_count):
         for c in range(col_count):
