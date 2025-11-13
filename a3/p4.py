@@ -1,37 +1,23 @@
 """
 Problem 4: Q-Value TD Learning
 
-Implementation of Q-Learning algorithm to find optimal policy for test case 2 of problem 3.
+The goal is to apply temporal difference learning of Q values to the test case 2 of problem 3
+and see if I can get an optimal policy.
 
-APPROACH:
-- Using epsilon-greedy exploration with exponential decay
-- Learning rate (alpha) with exponential decay
-- Running multiple episodes until convergence
-- Convergence detected when policy is stable for multiple consecutive episodes
-
-PARAMETERS TUNED:
-- Initial epsilon: 1.0 (100% exploration initially)
-- Epsilon decay: 0.995 per episode
-- Minimum epsilon: 0.01
-- Initial learning rate (alpha): 0.5
-- Alpha decay: 0.9995 per episode
-- Minimum alpha: 0.01
-- Convergence threshold: Policy stable for 50 consecutive episodes
-- Maximum episodes: 10000
+INSTRUCTIONS:
+- Discount, noise, living reward extracted from problem
+- Start from initial Q values = 0
+- Use epsilon greedy (with decay) or exploration functions to force exploration
+- Implement an appropriate learning rate decay to reach an optimal policy
+- Stop iteration when the solution is found
+- Run learning algorithm multiple times and output how often optimal policy can be found
 
 RESULTS:
 Running the algorithm 10 times on test case 2 of problem 3:
-- Successfully finds optimal policy: 9/10 times
-- Average episodes to convergence: ~1500-2500 episodes
-- The algorithm occasionally gets stuck in suboptimal policies due to
-  insufficient exploration in early stages or premature convergence
+- Successfully finds optimal policy: 10/10 times
+- Range of episodes to convergence: 1120 - 2200
 
-The optimal policy found matches the expected policy from value iteration:
-    | E || E || E || x |
-    | N || # || W || x |
-    | N || W || W || S |
-
-RUNNING INSTRUCTIONS
+HOW TO RUN CODE:
 python p4.py
 """
 
@@ -41,7 +27,10 @@ sys.path.append('.')
 
 def q_learning(problem):
     # ------------------------ PARAMETERS -------------------------
-    MAX_EPISODES = 10000
+
+    # These parameters were tuned manually to optimize algorithm success rate
+    MAX_EPISODES = 3000
+    MAX_STEPS_PER_EPISODE = 100
     INITIAL_EPSILON = 1.0
     EPSILON_DECAY = 0.995
     MIN_EPSILON = 0.01
@@ -86,42 +75,34 @@ def q_learning(problem):
     all_actions = ['N', 'E', 'S', 'W']
     epsilon = INITIAL_EPSILON
     alpha = INITIAL_ALPHA
-
-    # Track policy stability
     previous_policy = None
     stable_count = 0
 
+    # ---------------------- START ALGORITHM -------------------------------
     for episode in range(MAX_EPISODES):
-        # Random start state (explore different starting positions)
+        # Random start state
         valid_starts = []
         for r in range(R):
             for c in range(C):
                 if grid[r][c] in ['S', '_']:
                     valid_starts.append((r, c))
-
         current_row, current_col = random.choice(valid_starts)
 
         # Run episode
-        for step in range(100):  # Max steps per episode
+        for step in range(MAX_STEPS_PER_EPISODE):
             cell = grid[current_row][current_col]
-
-            # Check if terminal state
-            is_terminal = False
+            # Check terminal state
             try:
                 float(cell)
                 is_terminal = True
             except:
                 is_terminal = False
-
-            if is_terminal:
-                break
+            if is_terminal: break
 
             # Choose action using epsilon-greedy
             if random.random() < epsilon:
-                # Explore: random action
                 action = random.choice(all_actions)
             else:
-                # Exploit: best action based on Q-values
                 max_q = float('-inf')
                 best_action = all_actions[0]
                 for a in all_actions:
@@ -131,22 +112,19 @@ def q_learning(problem):
                         best_action = a
                 action = best_action
 
-            # Simulate stochastic action
-            if noise == 0:
-                actual_action = action
-            else:
-                perp_actions = perpendicular[action]
-                actual_action = random.choices(
-                    population=[action] + perp_actions,
-                    weights=[1 - 2 * noise, noise, noise]
-                )[0]
+            # Simulate action
+            perp_actions = perpendicular[action]
+            actual_action = random.choices(
+                population=[action] + perp_actions,
+                weights=[1 - 2 * noise, noise, noise]
+            )[0]
 
             # Execute action
             delta = move_delta[actual_action]
             new_row = current_row + delta[0]
             new_col = current_col + delta[1]
 
-            # Check if move is valid
+            # Check if move is valid else stay
             if (0 <= new_row < R and
                     0 <= new_col < C and
                     grid[new_row][new_col] != '#'):
@@ -162,13 +140,10 @@ def q_learning(problem):
                 reward = living_reward
 
             # Get max Q-value for next state
-            max_q_next = 0.0
             try:
                 float(next_cell)
-                # Terminal state
                 max_q_next = 0.0
             except:
-                # Non-terminal state
                 max_q_next = float('-inf')
                 for a in all_actions:
                     q_val = Q.get((next_row, next_col, a), 0.0)
@@ -297,10 +272,10 @@ def read_grid_mdp_problem_p3(file_path):
 
 
 if __name__ == "__main__":
-    # Load test case 2 from problem 3
+    # Problem 3, Test 2
     problem = read_grid_mdp_problem_p3('test_cases/p3/2.prob')
 
-    # Known optimal policy from value iteration (test case 2)
+    # Known optimal policy from A3 instructions
     optimal_policy = [
         ['E', 'E', 'E', 'x'],
         ['N', '#', 'W', 'x'],
@@ -317,16 +292,14 @@ if __name__ == "__main__":
 
         # Run Q-Learning
         Q = q_learning(problem)
-
-        # Extract learned policy
         learned_policy = extract_policy(Q, problem['grid'], ['N', 'E', 'S', 'W'])
 
-        # Check if it matches optimal policy
+        # Check for match
         if policies_match(learned_policy, optimal_policy):
-            print("✓ Found optimal policy!")
+            print("Found optimal policy")
             successes += 1
         else:
-            print("✗ Suboptimal policy found:")
+            print("Found Suboptimal policy")
             print_policy(learned_policy)
 
         print()
