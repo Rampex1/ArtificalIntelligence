@@ -38,8 +38,8 @@ def policy_evaluation(problem):
     return_value += f"V^pi_k=0\n"
     return_value += print_values(V, grid)
 
-    # Perform policy evaluation iterations
-    for k in range(1, iterations + 1):
+    # Perform policy evaluation iterations - FIXED: run exactly 'iterations' times
+    for k in range(1, iterations):  # Change this line
         V_new = [[0.0 for _ in range(cols)] for _ in range(rows)]
 
         for r in range(rows):
@@ -103,7 +103,7 @@ def policy_evaluation(problem):
         return_value += f"V^pi_k={k}\n"
         return_value += print_values(V, grid)
 
-    return return_value
+    return return_value[:-1]
 
 
 def print_values(V, grid):
@@ -114,7 +114,7 @@ def print_values(V, grid):
     for r in range(rows):
         for c in range(cols):
             if grid[r][c] == '#':
-                output += '|#####|'
+                output += '| ##### |'
             else:
                 output += '|{:7.2f}|'.format(V[r][c])
         output += '\n'

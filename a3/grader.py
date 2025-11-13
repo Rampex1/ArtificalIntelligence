@@ -29,9 +29,9 @@ def check_test_case(problem_id, test_case_id, student_code_problem, student_code
             print(student_solution)
             print('Correct solution')
             print(solution)
-            #for i,s in enumerate(difflib.ndiff(student_solution, solution)):
-            #    if s[0]==' ': continue
-            #    elif s[0]=='-':
-            #        print(u'Delete "{}" from position {}'.format(s[-1],i))
-            #    elif s[0]=='+':
-            #        print(u'Add "{}" to position {}'.format(s[-1],i))
+            for i,s in enumerate(difflib.ndiff(student_solution, solution)):
+                if s[0]==' ': continue
+                elif s[0]=='-':
+                    print(u'Delete "{}" from position {}'.format(s[-1],i))
+                elif s[0]=='+':
+                    print(u'Add "{}" to position {}'.format(s[-1],i))
