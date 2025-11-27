@@ -299,16 +299,21 @@ class ExactInference(InferenceModule):
         position is known.
         """
         "*** YOUR CODE HERE ***"
+        # Using Bayes Rule, we have
+        # P(Position | Observation) = P(Observation | Position) x P(Position) / P(Observation)
+        # We know P(Observation) is same, so
+        # P(Position | Observation) ∝ P(Observation | Position) x P(Position)
+        # P(Position | Observation) ∝ Likelihood                X Prior
 
         # Positions
         pacmanPosition = gameState.getPacmanPosition()
         jailPosition = self.getJailPosition()
 
-        # Loop through all positions and update belief
+        # Update allPosition belief
         for pos in self.allPositions:
-            initialBelief = self.beliefs[pos]
-            observationProb = self.getObservationProb(observation, pacmanPosition, pos, jailPosition)
-            self.beliefs[pos] = initialBelief * observationProb
+            prior = self.beliefs[pos]
+            likelihood = self.getObservationProb(observation, pacmanPosition, pos, jailPosition)
+            self.beliefs[pos] = likelihood * prior
 
         self.beliefs.normalize()
 
