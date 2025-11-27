@@ -75,7 +75,11 @@ class DiscreteDistribution(dict):
         {}
         """
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+        total = self.total()
+        if total == 0: return None
+
+        for key in self.keys():
+            self[key] = self[key] / total
 
     def sample(self):
         """
@@ -99,8 +103,16 @@ class DiscreteDistribution(dict):
         0.0
         """
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+        dd = self.copy()
+        dd.normalize()
 
+        r = random.random()
+        cumulative = 0
+
+        for key, val in dd.items():
+            cumulative += val
+            if r < cumulative:
+                return key
 
 class InferenceModule:
     """
