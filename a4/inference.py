@@ -386,7 +386,36 @@ class ParticleFilter(InferenceModule):
         the DiscreteDistribution may be useful.
         """
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+
+        # Variables
+        pacmanPosition = gameState.getPacmanPosition()
+        jailPosition = self.getJailPosition()
+        weights = DiscreteDistribution()
+
+        # Calculate weight for each particle
+        for particle in self.particles:
+            weight = self.getObservationProb(
+                observation,
+                pacmanPosition,
+                particle,
+                jailPosition
+            )
+            weights[particle] += weight
+
+        # Edge case: All particles have zero weight
+        if weights.total() == 0:
+            self.initializeUniformly(gameState)
+            return
+
+        weights.normalize()
+
+        # Resample particles according to weighted distribution
+        newParticles = []
+        for i in range(self.numParticles):
+            sampledPosition = weights.sample()
+            newParticles.append(sampledPosition)
+
+        self.particles = newParticles
 
     def elapseTime(self, gameState):
         """
