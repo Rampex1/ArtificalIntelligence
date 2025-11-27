@@ -299,7 +299,7 @@ class ExactInference(InferenceModule):
         position is known.
         """
         "*** YOUR CODE HERE ***"
-        # Using Bayes Rule, we have
+        # INFERENCE EQUATION (Using Bayes Rule)
         # P(Position | Observation) = P(Observation | Position) x P(Position) / P(Observation)
         # We know P(Observation) is same, so
         # P(Position | Observation) ∝ P(Observation | Position) x P(Position)
@@ -327,7 +327,21 @@ class ExactInference(InferenceModule):
         current position is known.
         """
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+        # INFERENCE EQUATION (Using Law of Total probability)
+        # P(ghost at newPos) = Σ over all oldPos [ P(oldPos → newPos) × P(ghost was at oldPos)]
+        newBeliefs = DiscreteDistribution()
+
+        for oldPos in self.allPositions:
+            # P(ghost was at oldPos)
+            oldBelief = self.beliefs[oldPos]
+
+            newPosDist = self.getPositionDistribution(gameState, oldPos)
+            for newPos, probability in newPosDist.items():
+                # P(ghost at newPos) = P(ghost was at oldPos) × P(oldPos → newPos)
+                newBeliefs[newPos] += oldBelief * probability
+
+        self.beliefs = newBeliefs
+        self.beliefs.normalize()
 
     def getBeliefDistribution(self):
         return self.beliefs
