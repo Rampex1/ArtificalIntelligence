@@ -148,8 +148,25 @@ class GreedyBustersAgent(BustersAgent):
         ghostPositions = [dist.argMax() for dist in livingGhostPositionDistributions]
 
         def minDistanceToGhosts(position):
+            """
+            Helper function to find the closest distance from a position to a ghost
+            """
             if not ghostPositions: return float('inf')
-            return min(self.distancer.getDistance(position, ghostPos) for ghostPos in ghostPositions)
 
-        bestAction = min(legal, key=lambda action: minDistanceToGhosts(Actions.getSuccessor(pacmanPosition, action)))
+            distances = [self.distancer.getDistance(position, ghostPos)
+                        for ghostPos in ghostPositions]
+            return min(distances)
+
+        # Evaluate each legal action and choose the one that gets closest to any ghost
+        bestAction = None
+        bestDistance = float('inf')
+
+        for action in legal:
+            successorPosition = Actions.getSuccessor(pacmanPosition, action)
+            distanceToClosestGhost = minDistanceToGhosts(successorPosition)
+
+            if distanceToClosestGhost < bestDistance:
+                bestDistance = distanceToClosestGhost
+                bestAction = action
+
         return bestAction
