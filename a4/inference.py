@@ -331,16 +331,17 @@ class ExactInference(InferenceModule):
         "*** YOUR CODE HERE ***"
         # INFERENCE EQUATION (Using Law of Total probability)
         # P(ghost at newPos) = Σ over all oldPos [ P(oldPos → newPos) × P(ghost was at oldPos)]
+
         newBeliefs = DiscreteDistribution()
 
         for oldPos in self.allPositions:
-            # P(ghost was at oldPos)
             oldBelief = self.beliefs[oldPos]
+            if oldBelief == 0: continue
 
             newPosDist = self.getPositionDistribution(gameState, oldPos)
-            for newPos, probability in newPosDist.items():
+            for newPos, transitionProbability in newPosDist.items():
                 # P(ghost at newPos) = P(ghost was at oldPos) × P(oldPos → newPos)
-                newBeliefs[newPos] += oldBelief * probability
+                newBeliefs[newPos] += oldBelief * transitionProbability
 
         self.beliefs = newBeliefs
         self.beliefs.normalize()
