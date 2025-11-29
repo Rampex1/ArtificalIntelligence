@@ -371,9 +371,9 @@ class ParticleFilter(InferenceModule):
         """
         self.particles = []
         "*** YOUR CODE HERE ***"
-        n_legalPositions = len(self.legalPositions)
+        numberLegalPositions = len(self.legalPositions)
         for i in range(self.numParticles):
-            index = i % n_legalPositions
+            index = i % numberLegalPositions
             position = self.legalPositions[index]
             self.particles.append(position)
 
