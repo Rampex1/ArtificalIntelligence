@@ -371,9 +371,10 @@ class ParticleFilter(InferenceModule):
         """
         self.particles = []
         "*** YOUR CODE HERE ***"
+        n_legalPositions = len(self.legalPositions)
         for i in range(self.numParticles):
-            position_index = i % len(self.legalPositions)
-            position = self.legalPositions[position_index]
+            index = i % n_legalPositions
+            position = self.legalPositions[index]
             self.particles.append(position)
 
     def observeUpdate(self, observation, gameState):
@@ -397,12 +398,7 @@ class ParticleFilter(InferenceModule):
 
         # Calculate weight for each particle
         for particle in self.particles:
-            weight = self.getObservationProb(
-                observation,
-                pacmanPosition,
-                particle,
-                jailPosition
-            )
+            weight = self.getObservationProb(observation, pacmanPosition, particle, jailPosition)
             weights[particle] += weight
 
         # Edge case: All particles have zero weight
@@ -414,7 +410,7 @@ class ParticleFilter(InferenceModule):
 
         # Resample particles according to weighted distribution
         newParticles = []
-        for i in range(self.numParticles):
+        for _ in range(self.numParticles):
             sampledPosition = weights.sample()
             newParticles.append(sampledPosition)
 
