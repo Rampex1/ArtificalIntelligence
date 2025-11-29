@@ -111,8 +111,7 @@ class DiscreteDistribution(dict):
 
         for key, val in dd.items():
             cumulative += val
-            if r < cumulative:
-                return key
+            if r < cumulative: return key
 
 class InferenceModule:
     """
@@ -189,9 +188,12 @@ class InferenceModule:
         # CASE 2: Ghost not jailed but no observation
         if noisyDistance is None: return 0.0
 
-        # CASE 3: Ghost not jailed and normal reading
-        realDistance = manhattanDistance(pacmanPosition, ghostPosition)
-        return busters.getObservationProbability(noisyDistance, realDistance)
+        # CASE 3: Ghost not jailed and normal observation
+        # P(noisyDistance | pacmanPosition, ghostPosition)
+        # = P(noisyDistance | manhattanDistance(pacmanPosition, ghostPosition))
+        # = P(noisyDistance | trueDistance)
+        trueDistance = manhattanDistance(pacmanPosition, ghostPosition)
+        return busters.getObservationProbability(noisyDistance, trueDistance)
 
     def setGhostPosition(self, gameState, ghostPosition, index):
         """
@@ -300,10 +302,10 @@ class ExactInference(InferenceModule):
         """
         "*** YOUR CODE HERE ***"
         # INFERENCE EQUATION (Using Bayes Rule)
-        # P(Position | Observation) = P(Observation | Position) x P(Position) / P(Observation)
-        # We know P(Observation) is same, so
-        # P(Position | Observation) ∝ P(Observation | Position) x P(Position)
-        # P(Position | Observation) ∝ Likelihood                X Prior
+        # P(Position | Observation)
+        # = P(Observation | Position) x P(Position) / P(Observation)
+        # ∝ P(Observation | Position) x P(Position) since P(Observation) is same
+        # ∝ Likelihood                x Prior
 
         # Positions
         pacmanPosition = gameState.getPacmanPosition()
@@ -311,8 +313,8 @@ class ExactInference(InferenceModule):
 
         # Update allPosition belief
         for pos in self.allPositions:
-            prior = self.beliefs[pos]
             likelihood = self.getObservationProb(observation, pacmanPosition, pos, jailPosition)
+            prior = self.beliefs[pos]
             self.beliefs[pos] = likelihood * prior
 
         self.beliefs.normalize()
